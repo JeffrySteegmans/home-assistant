@@ -1,0 +1,7 @@
+- platform: travisci
+  api_key: !secret travisci__token
+  repository:
+    - home-assistant
+  branch: develop
+  monitored_conditions:
+    - last_build_state
