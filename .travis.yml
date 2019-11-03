@@ -8,3 +8,7 @@ install:
   - pip3 install homeassistant
 script:
   - hass -c . --script check_config
+# blocklist
+branches:
+  except:
+  - develop
