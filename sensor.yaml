@@ -1,5 +1,6 @@
 - platform: travisci
   api_key: !secret travisci__token
+  name: "test"
   repository:
     - home-assistant
   monitored_conditions:
