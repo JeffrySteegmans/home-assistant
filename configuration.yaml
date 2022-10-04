@@ -83,5 +83,3 @@ template:
         unit_of_measurement: 'kWh'
         state: >
           {{ states.counter.totaal_stroomverbruik_wh.state | float * 0.001 }}
-  
-#Travis test
