@@ -1,0 +1,129 @@
+substitutions:
+  device_name: 'switch-002'
+  friendly_name: 'Switch 002'
+  device_description: 'Switch 002'
+  button_pin: 'GPIO14'
+  led_pin: 'GPIO4'
+  switch_pin: 'GPIO12'
+  static_ip: '192.168.0.67'
+
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+
+esp8266:
+  board: esp01_1m
+  framework:
+    version: recommended
+
+wifi:
+  ssid: !secret wifi__ssid
+  password: !secret wifi__password
+  manual_ip:
+    static_ip: ${static_ip}
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: '${friendly_name} - Fallback Hotspot'
+    password: !secret wifi__password--fallback
+
+captive_portal:
+
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api__password
+
+ota:
+  safe_mode: true
+  reboot_timeout: 10min
+  num_attempts: 5
+  password: !secret ota__password
+
+# Sensors for ESP version and WIFI information
+text_sensor:
+  - platform: version
+    hide_timestamp: true
+    name: '${friendly_name} - ESPHome Version'
+  - platform: wifi_info
+    ip_address:
+      name: '${friendly_name} - IP Address'
+      icon: mdi:wifi
+    ssid:
+      name: '${friendly_name} - Connected SSID'
+      icon: mdi:wifi-strength-2
+  - platform: template
+    name: '${friendly_name} - Uptime'
+    id: uptime_human
+    icon: mdi:clock-start
+
+binary_sensor:
+  - platform: status
+    name: '${friendly_name} - Status'
+  - platform: gpio
+    name: "${friendly_name} - Button"
+    pin:
+      number: ${button_pin}
+      mode: INPUT_PULLUP
+      inverted: true
+    internal: true
+    on_press:
+      - switch.toggle: relay
+      - light.toggle: status_led
+
+sensor:
+  - platform: uptime
+    id: uptime_sensor
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+  - platform: wifi_signal
+    name: '${friendly_name} - WiFi signal'
+    update_interval: 10s
+
+output:
+  - platform: esp8266_pwm
+    id: led
+    pin:
+      number: ${led_pin}
+      inverted: true
+
+light:
+  - platform: monochromatic
+    id: status_led
+    name: "${friendly_name} - LED"
+    output: led
+
+switch:
+  - platform: gpio
+    name: "${friendly_name} - Relay"
+    id: relay
+    pin: ${switch_pin}
+  - platform: template
+    name: "${friendly_name} - Relay and Light"
+    optimistic: true
+    id: relay_and_light
+    turn_on_action:
+      - switch.turn_on: relay
+      - light.turn_on: status_led
+    turn_off_action:
+      - switch.turn_off: relay
+      - light.turn_off: status_led

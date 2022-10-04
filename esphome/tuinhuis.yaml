@@ -1,0 +1,132 @@
+substitutions:
+  device_name: 'tuinhuis'
+  friendly_name: 'Tuinhuis'
+  device_description: 'Tuinhuis licht controller'
+  dallas_pin: 'D5'
+  dallas_address_buiten: '0x7F0316A007DAFF28'
+  dallas_address_binnen: '0xB8F4D07B12646128'
+  static_ip: '192.168.0.71'
+
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+
+esp8266:
+  board: d1_mini
+  framework:
+    version: recommended
+
+wifi:
+  ssid: !secret wifi__ssid
+  password: !secret wifi__password
+  manual_ip:
+    static_ip: ${static_ip}
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: '${friendly_name} - Fallback Hotspot'
+    password: !secret wifi__password--fallback
+
+captive_portal:
+
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api__password
+
+ota:
+  safe_mode: true
+  reboot_timeout: 10min
+  num_attempts: 5
+  password: !secret ota__password
+
+# Sensors for ESP version and WIFI information
+text_sensor:
+  - platform: version
+    hide_timestamp: true
+    name: '${friendly_name} - ESPHome Version'
+  - platform: wifi_info
+    ip_address:
+      name: '${friendly_name} - IP Address'
+      icon: mdi:wifi
+    ssid:
+      name: '${friendly_name} - Connected SSID'
+      icon: mdi:wifi-strength-2
+  - platform: template
+    name: '${friendly_name} - Uptime'
+    id: uptime_human
+    icon: mdi:clock-start
+
+sensor:
+  - platform: uptime
+    id: uptime_sensor
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+  - platform: wifi_signal
+    name: '${friendly_name} - WiFi signal'
+    update_interval: 10s
+  - platform: dallas
+    address: ${dallas_address_buiten}
+    name: '${friendly_name} - Buiten temperatuur'
+  - platform: dallas
+    address: ${dallas_address_binnen}
+    name: '${friendly_name} - Binnen temperatuur'
+
+binary_sensor:
+  - platform: status
+    name: '${friendly_name} - Status'
+
+dallas:
+  - pin: ${dallas_pin}
+
+output:
+  - platform: gpio
+    pin: D1
+    id: RELAY_1
+    inverted: True
+  - platform: gpio
+    pin: D2
+    id: RELAY_2
+    inverted: True
+  - platform: gpio
+    pin: D3
+    id: RELAY_3
+    inverted: True
+  - platform: gpio
+    pin: D4
+    id: RELAY_4
+    inverted: True
+
+light:
+  - platform: binary
+    name: '${friendly_name} - Werkbank'
+    output: RELAY_1
+  - platform: binary
+    name: '${friendly_name} - TL lamp'
+    output: RELAY_2
+    id: "tuinhuis_tl"
+  - platform: binary
+    name: '${friendly_name} - Deur buiten'
+    output: RELAY_3
+  - platform: binary
+    name: '${friendly_name} - Verstraler'
+    output: RELAY_4

@@ -9,6 +9,7 @@
 !*.md
 !LICENSE
 !.HA_Version
+!esphome
 
 # Ignore folders.
 .storage

@@ -1,1 +1,460 @@
-[]
+- id: '1663708324706'
+  alias: Alle verlichting uitschakelen bij zonsopkomst & middernacht
+  description: test
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:30:00
+  - platform: time
+    at: 00:00:00
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 3274e0293dbfe433e651b37cbdc76454
+    entity_id: light.bol
+    domain: light
+  - type: turn_off
+    device_id: d145c3e70d621a2142265c167f33d4f3
+    entity_id: light.keuken
+    domain: light
+  - type: turn_off
+    device_id: d583aed87acc6e032e94d94556b0260a
+    entity_id: light.tv
+    domain: light
+  - type: turn_off
+    device_id: 6344327eebd860a96279fa26ae056d6e
+    entity_id: switch.tuinhuis_schommel_socket_1
+    domain: switch
+  - type: turn_off
+    device_id: ccf549245fa19047eaaaf344d3a18282
+    entity_id: switch.switch_001_relay_and_light
+    domain: switch
+  - type: turn_off
+    device_id: 0af4dfed6d349c950bc15f0016ed0d1a
+    entity_id: switch.switch_002_relay_and_light
+    domain: switch
+  - type: turn_off
+    device_id: a7ba5d0a024ae3e1a6de29153c962cac
+    entity_id: light.tuinhuis_werkbank
+    domain: light
+  - type: turn_off
+    device_id: a7ba5d0a024ae3e1a6de29153c962cac
+    entity_id: light.tuinhuis_tl_lamp
+    domain: light
+  - type: turn_off
+    device_id: a7ba5d0a024ae3e1a6de29153c962cac
+    entity_id: light.tuinhuis_deur_buiten
+    domain: light
+  - type: turn_off
+    device_id: a7ba5d0a024ae3e1a6de29153c962cac
+    entity_id: light.tuinhuis_verstraler
+    domain: light
+  - type: turn_off
+    device_id: bff700e7a48858e4a1ad15b82f61954b
+    entity_id: light.voortuin_verlichting
+    domain: light
+  - choose:
+    - conditions:
+      - condition: time
+        after: 04:00:00
+      sequence:
+      - service: notify.mobile_app_iphone_van_jeffry
+        data:
+          message: Alle verlichting uitgeschakeld bij zonsopkomst
+    - conditions:
+      - condition: time
+        before: 04:00:00
+      sequence:
+      - service: notify.mobile_app_iphone_van_jeffry
+        data:
+          message: Alle verlichting uitgeschakeld om middernacht
+  mode: single
+- id: '1663708409547'
+  alias: Binnenverlichting aan 's morgens vroeg
+  description: ''
+  trigger:
+  - platform: time
+    at: 06:30:00
+  condition:
+  - condition: sun
+    before: sunrise
+  action:
+  - type: turn_on
+    device_id: d583aed87acc6e032e94d94556b0260a
+    entity_id: light.tv
+    domain: light
+    brightness_pct: 50
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Binnenverlichting aan 's morgens
+  mode: single
+- id: '1663708499675'
+  alias: Binnenverlichting aanschakelen bij zonsondergang
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -00:30:00
+  condition: []
+  action:
+  - type: turn_on
+    device_id: 3274e0293dbfe433e651b37cbdc76454
+    entity_id: light.bol
+    domain: light
+    brightness_pct: 50
+  - type: turn_on
+    device_id: d583aed87acc6e032e94d94556b0260a
+    entity_id: light.tv
+    domain: light
+    brightness_pct: 50
+  - type: turn_on
+    device_id: 0af4dfed6d349c950bc15f0016ed0d1a
+    entity_id: switch.switch_002_relay_and_light
+    domain: switch
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Binnenverlichting ingeschakeld (zonsondergang)
+  mode: single
+- id: '1663708586814'
+  alias: Buitenverlichting aan bij zonsondergang
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: -00:05:00
+  condition: []
+  action:
+  - type: turn_on
+    device_id: bff700e7a48858e4a1ad15b82f61954b
+    entity_id: light.voortuin_verlichting
+    domain: light
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Tuinverlichting aangeschakeld
+  mode: single
+- id: '1663708679286'
+  alias: Buitenverlichting uit bij zonsopkomst
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 00:15:00
+  condition: []
+  action:
+  - type: turn_off
+    device_id: bff700e7a48858e4a1ad15b82f61954b
+    entity_id: light.voortuin_verlichting
+    domain: light
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Tuinverlichting uitgeschakeld
+  mode: single
+- id: '1663789947969'
+  alias: ENERGY - Melding bij stroompiek boven 5000W
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.energy_monitor_power
+    above: 5000
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: 'Stroomverbruik is hoger dan 5kW!
+
+        {{states(''sensor.energy_monitor_power'')}}W
+
+        '
+  mode: single
+- id: '1663790924784'
+  alias: Melding sturen indien droogkast begint met afkoelen
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.droogkast_dryer_job_state
+    to: cooling
+  condition: []
+  action:
+  - service: tts.google_say
+    data:
+      entity_id: media_player.gh_living
+      message: Droogkast begint met afkoelen
+      language: nl
+      cache: true
+  mode: single
+- id: '1663791000902'
+  alias: Melding sturen indien droogkast begint met kreukelbeveiliging
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.droogkast_dryer_job_state
+    to: wrinkleprevent
+  condition: []
+  action:
+  - service: tts.google_say
+    data:
+      entity_id: media_player.gh_living
+      cache: true
+      language: nl
+      message: Droogkast begint met kreukelbeveiliging
+  mode: single
+- id: '1663791074777'
+  alias: Melding sturen indien droogkast volledig klaar is
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.droogkast_dryer_job_state
+    to: finished
+  condition: []
+  action:
+  - service: tts.google_say
+    data:
+      entity_id: media_player.gh_living
+      cache: true
+      language: nl
+      message: Droogkast is volledig klaar
+  mode: single
+- id: '1663791395150'
+  alias: Verlichting achterdeur aanschakelen als iemand thuis komt
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.jeffry_steegmans
+    zone: zone.home
+    event: enter
+  - platform: zone
+    entity_id: person.katja_van_oijen
+    zone: zone.home
+    event: enter
+  condition:
+  - condition: or
+    conditions:
+    - condition: sun
+      before: sunrise
+      before_offset: -00:30:00
+    - condition: sun
+      after: sunset
+      after_offset: -00:30:00
+  action:
+  - service: scene.create
+    data:
+      scene_id: achterdeursnapshot
+      snapshot_entities:
+      - switch.achterdeur
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.achterdeur
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Verlichting achterdeur aangeschakeld omdat iemand thuis komt
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - service: scene.turn_on
+    target:
+      entity_id: scene.achterdeursnapshot
+    metadata: {}
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Oude state van de achterdeur is hersteld
+  mode: single
+- id: '1664115263014'
+  alias: ENERGY - Update gas verbruik tellers
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.gas_monitor_daily_gas_usage
+  condition: []
+  action:
+  - service: counter.increment
+    data: {}
+    target:
+      entity_id:
+      - counter.dagelijks_gasverbruik_liter
+      - counter.maandelijks_gasverbruik_liter
+      - counter.totaal_gasverbruik_liter
+      - counter.jaarlijks_gasverbruik_liter
+  mode: single
+- id: '1664131780265'
+  alias: ENERGY - Reset dagelijkse tellers
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  condition: []
+  action:
+  - service: counter.reset
+    data: {}
+    target:
+      entity_id:
+      - counter.dagelijks_gasverbruik_liter
+      - counter.dagelijks_stroomverbruik_wh
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Dagelijkste energie tellers zijn gereset
+  mode: single
+- id: '1664132122212'
+  alias: ENERGY - Reset maandelijkse tellers
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  condition:
+  - condition: template
+    value_template: '''{{ now().day == 1 }}'''
+  action:
+  - service: counter.reset
+    data: {}
+    target:
+      entity_id:
+      - counter.maandelijks_gasverbruik_liter
+      - counter.maandelijks_stroomverbruik_wh
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Maandelijkse energie tellers gereset
+  mode: single
+- id: '1664133251313'
+  alias: ENERGY - Reset jaarlijkse teller
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:00
+  condition:
+  - condition: template
+    value_template: '''{{ now().day == 1 and now().month == 1 }}'''
+  action:
+  - service: counter.reset
+    data: {}
+    target:
+      entity_id:
+      - counter.jaarlijks_gasverbruik_liter
+      - counter.jaarlijks_stroomverbruik_wh
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Jaarlijkse energie tellers gereset
+  mode: single
+- id: '1664134351724'
+  alias: TEST - Geo locatie katja
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.katja_van_oijen
+    zone: zone.home
+    event: leave
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Katja verlaat het thuisfront
+  mode: single
+- id: '1664134434645'
+  alias: TEST - Geo locatie Katja thuis komen
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.katja_van_oijen
+    zone: zone.ipte
+    event: leave
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Katja vertrekt van het werk
+  mode: single
+- id: '1664136616113'
+  alias: ENERGY - Verbruik statistieken
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:59:59'
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: 'Dagelijks gasverbruik: {{ states.sensor.dagelijks_gasverbruik.state
+        }} m³{{- ''\n'' -}} Maandelijks gasverbruik: {{ states.sensor.maandelijks_gasverbruik.state
+        }} m³{{- ''\n'' -}} Jaarlijks gasverbruik: {{ states.sensor.jaarlijks_gasverbruik.state
+        }} m³{{- ''\n'' -}} Totaal gasverbruik: {{ states.sensor.totaal_gasverbruik.state
+        }} m³'
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: 'Dagelijks stroomverbruik: {{ states.sensor.dagelijks_stroomverbruik.state
+        }} kWh{{- ''\n'' -}}Maandelijks stroomverbruik: {{states.sensor.maandelijks_stroomverbruik.state
+        }} kWh{{- ''\n'' -}}Jaarlijks stroomverbruik: {{ states.sensor.jaarlijks_stroomverbruik.state
+        }} kWh{{- ''\n'' -}} Totaal stroomverbruik: {{ states.sensor.totaal_stroomverbruik.state
+        }} kWh'
+  mode: single
+- id: '1664219257339'
+  alias: ENERGY - Update stroom verbruik tellers
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.energy_monitor_daily_energy_usage
+  condition: []
+  action:
+  - service: counter.increment
+    data: {}
+    target:
+      entity_id:
+      - counter.dagelijks_stroomverbruik_wh
+      - counter.jaarlijks_stroomverbruik_wh
+      - counter.maandelijks_stroomverbruik_wh
+      - counter.totaal_stroomverbruik_wh
+  mode: single
+- id: '1664721391094'
+  alias: Melding indien verwarming aanspringt zonder dat iemand thuis is
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - climate.woonkamer
+    attribute: hvac_action
+    to: heating
+  condition:
+  - condition: and
+    conditions:
+    - condition: not
+      conditions:
+      - condition: zone
+        entity_id: person.jeffry_steegmans
+        zone: zone.home
+      - condition: zone
+        entity_id: person.katja_van_oijen
+        zone: zone.home
+  action:
+  - service: notify.mobile_app_iphone_van_jeffry
+    data:
+      message: Verwarming staat aan, en niemand is thuis!
+      data:
+        actions:
+        - action: SETTEMP
+          title: Temperatuur verlagen naar 19°C
+          icon: sfsymbols:flame
+  - wait_for_trigger:
+    - platform: event
+      event_type: mobile_app_notification_action
+      event_data:
+        action: SETTEMP
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ wait.trigger.event.data.action == "SETTEMP" }}'
+      sequence:
+      - service: climate.set_temperature
+        data:
+          temperature: 19
+        target:
+          entity_id: climate.woonkamer
+  mode: single

@@ -1,0 +1,73 @@
+- id: '1664311609945'
+  name: Slaapwel
+  entities:
+    light.bol:
+      min_mireds: 153
+      max_mireds: 500
+      supported_color_modes:
+      - brightness
+      - color_temp
+      friendly_name: Bol
+      supported_features: 0
+      state: 'off'
+    light.tv:
+      min_mireds: 153
+      max_mireds: 500
+      supported_color_modes:
+      - brightness
+      - color_temp
+      friendly_name: TV
+      supported_features: 0
+      state: 'off'
+    switch.achterdeur:
+      friendly_name: Achterdeur
+      state: 'off'
+    switch.switch_002_relay_and_light:
+      friendly_name: Switch 002 - Relay and Light
+      state: 'off'
+    media_player.tv_living:
+      source_list:
+      - AV
+      - Blu-ray
+      - Chromecast
+      - Component
+      - Device Connector
+      - Disney+
+      - Foto en video
+      - Gebruikershandleiding
+      - LG Content Store
+      - LiveTV
+      - Meldingen
+      - Multi-view
+      - Muziek
+      - Netflix
+      - Opnamen
+      - Planner
+      - Plex
+      - 'Radio Belgie by myTuner: Radio Luisteren'
+      - Screen Share
+      - 'Spotify: muziek en podcasts'
+      - Switch
+      - TV VLAANDEREN
+      - Toegankelijk-Heid
+      - Tv-gids
+      - Webbrowser
+      - YouTube
+      - Zoeken
+      assumed_state: true
+      device_class: tv
+      friendly_name: TV Living
+      supported_features: 24381
+      state: 'off'
+  icon: mdi:sleep
+  metadata:
+    light.bol:
+      entity_only: true
+    light.tv:
+      entity_only: true
+    switch.achterdeur:
+      entity_only: true
+    switch.switch_002_relay_and_light:
+      entity_only: true
+    media_player.tv_living:
+      entity_only: true

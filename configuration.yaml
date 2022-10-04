@@ -1,22 +1,86 @@
 
-# Configure a default setup of Home Assistant (frontend, api, etc)
+# Loads default set of integrations. Do not remove.
 default_config:
 
-lovelace:
-  mode: yaml
-
-frontend:
-  javascript_version: auto
-
-# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-# http:
-#   base_url: example.duckdns.org:8123
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.0.2
+    - 192.168.0.3
 
 # Text to speech
 tts:
   - platform: google_translate
+    cache: true
+    cache_dir: /tmp/tts
+    time_memory: 300
+    base_url: !secret base__url
+    service_name: google_say
 
-group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
-sensor: !include sensor.yaml
+scene: !include scenes.yaml
+sensor:
+  - platform: sickchill
+    host: 192.168.0.2
+    port: 8082
+    protocol: http
+    sort: date
+    token: !secret sickchill__token
+template:
+  - sensor:
+      - name: 'Dagelijks gasverbruik'
+        unit_of_measurement: 'm³'
+        state: >
+          {{ states.counter.dagelijks_gasverbruik_liter.state | float * 0.001 }}
+  - sensor:
+      - name: 'Prijs dagelijks gasverbruik'
+        unit_of_measurement: '€'
+        state: >
+          {{ ((states.sensor.dagelijks_gasverbruik.state | float * 11.51 ) * (states.input_number.gasprijs_per_kwh_ceur_kwh.state | float / 100)) | round(2) }}
+  - sensor:
+      - name: 'Maandelijks gasverbruik'
+        unit_of_measurement: 'm³'
+        state: >
+          {{ states.counter.maandelijks_gasverbruik_liter.state | float * 0.001 }}
+  - sensor:
+      - name: 'Prijs maandelijks gasverbruik'
+        unit_of_measurement: '€'
+        state: >
+          {{ ((states.sensor.maandelijks_gasverbruik.state | float * 11.51 ) * (states.input_number.gasprijs_per_kwh_ceur_kwh.state | float / 100)) | round(2) }}
+  - sensor:
+      - name: 'Jaarlijks gasverbruik'
+        unit_of_measurement: 'm³'
+        state: >
+          {{ states.counter.jaarlijks_gasverbruik_liter.state | float * 0.001 }}
+  - sensor:
+      - name: 'Prijs jaarlijks gasverbruik'
+        unit_of_measurement: '€'
+        state: >
+          {{ ((states.sensor.jaarlijks_gasverbruik.state | float * 11.51 ) * (states.input_number.gasprijs_per_kwh_ceur_kwh.state | float / 100)) | round(2) }}
+  - sensor:
+      - name: 'Totaal gasverbruik'
+        unit_of_measurement: 'm³'
+        state: >
+          {{ states.counter.totaal_gasverbruik_liter.state | float * 0.001 }}
+  - sensor:
+      - name: 'Dagelijks stroomverbruik'
+        unit_of_measurement: 'kWh'
+        state: >
+          {{ states.counter.dagelijks_stroomverbruik_wh.state | float * 0.001 }}
+  - sensor:
+      - name: 'Maandelijks stroomverbruik'
+        unit_of_measurement: 'kWh'
+        state: >
+          {{ states.counter.maandelijks_stroomverbruik_wh.state | float * 0.001 }}
+  - sensor:
+      - name: 'Jaarlijks stroomverbruik'
+        unit_of_measurement: 'kWh'
+        state: >
+          {{ states.counter.jaarlijks_stroomverbruik_wh.state | float * 0.001 }}
+  - sensor:
+      - name: 'Totaal stroomverbruik'
+        unit_of_measurement: 'kWh'
+        state: >
+          {{ states.counter.totaal_stroomverbruik_wh.state | float * 0.001 }}
+  

@@ -1,0 +1,133 @@
+substitutions:
+  device_name: 'gas-monitor'
+  friendly_name: 'Gas monitor'
+  device_description: 'Monitoren van gas verbruik'
+  pulse_meter_pin: 'D4'
+  static_ip: '192.168.0.73'
+
+esphome:
+  name: ${device_name}
+  comment: ${device_description}
+
+esp8266:
+  board: d1_mini
+  restore_from_flash: True
+  framework:
+    version: recommended
+
+wifi:
+  ssid: !secret wifi__ssid
+  password: !secret wifi__password
+  manual_ip:
+    static_ip: ${static_ip}
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: '${friendly_name} - Fallback Hotspot'
+    password: !secret wifi__password--fallback
+
+captive_portal:
+
+logger:
+
+# Enable Home Assistant API
+api:
+  password: !secret api__password
+
+ota:
+  safe_mode: true
+  reboot_timeout: 10min
+  num_attempts: 5
+  password: !secret ota__password
+
+# Sensors for ESP version and WIFI information
+text_sensor:
+  - platform: version
+    hide_timestamp: true
+    name: '${friendly_name} - ESPHome Version'
+  - platform: wifi_info
+    ip_address:
+      name: '${friendly_name} - IP Address'
+      icon: mdi:wifi
+    ssid:
+      name: '${friendly_name} - Connected SSID'
+      icon: mdi:wifi-strength-2
+  - platform: template
+    name: '${friendly_name} - Uptime'
+    id: uptime_human
+    icon: mdi:clock-start
+
+globals:
+   - id: total_daily
+     type: int
+     restore_value: True
+
+sensor:
+  - platform: uptime
+    id: uptime_sensor
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).raw_state);
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds /  60;
+              seconds = seconds % 60;
+              return (
+                (days ? String(days) + "d " : "") +
+                (hours ? String(hours) + "h " : "") +
+                (minutes ? String(minutes) + "m " : "") +
+                (String(seconds) + "s")
+              ).c_str();
+  - platform: wifi_signal
+    name: '${friendly_name} - WiFi signal'
+    update_interval: 10s
+  - platform: pulse_meter
+    id: gas
+    pin: ${pulse_meter_pin}
+    name: '${friendly_name} - Gas usage'
+    internal_filter: 75ms
+    internal_filter_mode: PULSE
+    unit_of_measurement: 'm³/min'
+    timeout: 1min
+    device_class: gas
+    state_class: measurement
+    accuracy_decimals: 3
+    filters:
+      multiply: 0.01
+    icon: 'mdi:fire'
+    total:
+      name: '${friendly_name} - Daily gas usage'
+      unit_of_measurement: 'm³'
+      device_class: gas
+      state_class: total_increasing
+      accuracy_decimals: 2
+      filters:
+        - multiply: 0.01
+    on_value:
+      then:
+        -  lambda: |-
+            id(total_daily) += 10;
+
+binary_sensor:
+  - platform: status
+    name: '${friendly_name} - Status'
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Brussels
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        then:
+          - pulse_meter.set_total_pulses:
+              id: gas
+              value: 0
