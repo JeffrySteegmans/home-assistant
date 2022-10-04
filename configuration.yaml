@@ -84,3 +84,4 @@ template:
         state: >
           {{ states.counter.totaal_stroomverbruik_wh.state | float * 0.001 }}
   
+#Travis test
