@@ -6,6 +6,8 @@ before_install:
   - sudo apt-get install -y libudev-dev
 install:
   - pip3 install homeassistant
+  - git clone https://github.com/youdroid/home-assistant-sickchill sickchill/
+  - mv sickchill/custom_components config/custom_components
 script:
   - hass -c . --script check_config
 # blocklist
